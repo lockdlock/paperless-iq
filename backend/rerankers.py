@@ -242,5 +242,15 @@ def build_reranker(config: Any, providers: dict | None) -> Reranker | None:
         logger.warning("Failed to build reranker (method=%s); reranking disabled.", method, exc_info=True)
         return None
 
+    if method == "external":
+        provider = providers.get("external_reranker") if providers else None
+        if provider is None:
+            logger.warning(
+                "Rerank method 'external' selected but external reranker "
+                "provider is unavailable; reranking disabled."
+            )
+            return None
+        return provider
+
     logger.warning("Unknown rerank_method '%s'; reranking disabled.", method)
     return None

@@ -12,6 +12,7 @@ export const EMBED_MODEL_DEFAULTS: Record<string, string> = {
   ollama:  "nomic-embed-text",
   bedrock: "amazon.titan-embed-text-v2:0",
   openai:  "text-embedding-3-small",
+  external: "",
 };
 
 export const VECTOR_STORE_BACKENDS = [
@@ -26,9 +27,10 @@ export const CHUNK_STRATEGIES = [
 ] as const;
 
 export const RERANK_METHODS = [
-  { value: "llm",   labelKey: "aiProvider.search.rerankMethod.llm" },
-  { value: "local", labelKey: "aiProvider.search.rerankMethod.local" },
-  { value: "api",   labelKey: "aiProvider.search.rerankMethod.api" },
+  { value: "llm",      labelKey: "aiProvider.search.rerankMethod.llm" },
+  { value: "local",    labelKey: "aiProvider.search.rerankMethod.local" },
+  { value: "api",      labelKey: "aiProvider.search.rerankMethod.api" },
+  { value: "external", labelKey: "aiProvider.search.rerankMethod.external" },
 ] as const;
 
 export const QDRANT_MODES = [

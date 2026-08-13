@@ -15,6 +15,8 @@ from backend.providers import (
     OpenAIProvider,
 )
 from backend.providers.encryption import encrypt_credential
+from backend.providers.external_embedding import ExternalEmbeddingProvider
+from backend.providers.external_reranker import ExternalRerankerProvider
 
 logger = logging.getLogger(__name__)
 
@@ -105,4 +107,74 @@ def build_providers(
     else:
         raise ValueError(f"Unsupported LLM provider: '{provider_name}'")
 
-    return {provider_name: provider}
+    providers: dict[str, LLMProvider] = {provider_name: provider}
+
+    # External embedding provider is independent from the LLM provider.
+    if config.embed_provider == "external":
+        external_url = config.external_embedding_url
+        external_model = config.external_embedding_model
+        external_api_key = config.external_embedding_api_key
+
+        if not external_url:
+            raise ValueError(
+                "embed_provider='external' requires external_embedding_url."
+            )
+        if not external_model:
+            raise ValueError(
+                "embed_provider='external' requires external_embedding_model."
+            )
+        if not external_api_key:
+            raise ValueError(
+                "embed_provider='external' requires external_embedding_api_key."
+            )
+
+        external_api_key_enc = encrypt_credential(
+            external_api_key.decode()
+            if isinstance(external_api_key, bytes)
+            else external_api_key,
+            secret_key,
+        )
+
+        providers["external"] = ExternalEmbeddingProvider(
+            api_key_enc=external_api_key_enc,
+            model=external_model,
+            secret_key=secret_key,
+            base_url=external_url,
+            dimension=config.embedding_dimension,
+        )
+
+
+    # External reranker provider is independent from the LLM provider.
+    if config.rerank_method == "external":
+        external_url = config.rerank_external_url
+        external_model = config.rerank_external_model
+        external_api_key = config.rerank_external_api_key
+
+        if not external_url:
+            raise ValueError(
+                "rerank_method='external' requires rerank_external_url."
+            )
+        if not external_model:
+            raise ValueError(
+                "rerank_method='external' requires rerank_external_model."
+            )
+        if not external_api_key:
+            raise ValueError(
+                "rerank_method='external' requires rerank_external_api_key."
+            )
+
+        external_api_key_enc = encrypt_credential(
+            external_api_key.decode()
+            if isinstance(external_api_key, bytes)
+            else external_api_key,
+            secret_key,
+        )
+
+        providers["external_reranker"] = ExternalRerankerProvider(
+            api_key_enc=external_api_key_enc,
+            model=external_model,
+            secret_key=secret_key,
+            base_url=external_url,
+        )
+
+    return providers

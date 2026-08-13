@@ -586,5 +586,14 @@
   "grooming.settings.scan.resuggestDays.label": "再提案までの日数",
   "grooming.settings.scan.resuggestDays.tip": "却下された提案が再生成される可能性があるまでの日数です。0 = 再提案しない。",
   "version.updateAvailable": "アップデートがあります",
-  "version.updateTooltip": "v{{latest}} が利用可能です — リリースノートを確認してください"
+  "version.updateTooltip": "v{{latest}} が利用可能です — リリースノートを確認してください",
+  "aiProvider.embeddings.external": "外部エンベディング",
+  "aiProvider.embeddings.external.url": "外部エンベディングURL",
+  "aiProvider.embeddings.external.model": "外部エンベディングモデル",
+  "aiProvider.embeddings.external.apiKey": "外部エンベディングAPIキー",
+  "aiProvider.embeddings.external.dimension": "エンベディング次元数",
+  "aiProvider.search.rerankMethod.external": "外部リランカー",
+  "aiProvider.search.rerankExternal.url": "外部リランカーURL",
+  "aiProvider.search.rerankExternal.model": "外部リランカーモデル",
+  "aiProvider.search.rerankExternal.apiKey": "外部リランカーAPIキー"
 }

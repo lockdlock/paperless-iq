@@ -51,6 +51,10 @@ export default function SettingsPage() {
   const [selectedEmbedProvider, setSelectedEmbedProvider] = useState("ollama");
   const [llmModel, setLlmModel] = useState("");
   const [embedModel, setEmbedModel] = useState("");
+  const [externalEmbeddingUrl, setExternalEmbeddingUrl] = useState("");
+  const [externalEmbeddingModel, setExternalEmbeddingModel] = useState("");
+  const [externalEmbeddingApiKey, setExternalEmbeddingApiKey] = useState("");
+  const [embeddingDimension, setEmbeddingDimension] = useState<number | null>(null);
   const [ollamaUrl, setOllamaUrl] = useState("http://localhost:11434");
   const [bedrockRegion, setBedrockRegion] = useState("");
   const [bedrockAccessKeyId, setBedrockAccessKeyId] = useState("");
@@ -61,6 +65,9 @@ export default function SettingsPage() {
   const [qdrantApiKey, setQdrantApiKey] = useState("");
   const [rerankEnabled, setRerankEnabled] = useState(false);
   const [rerankMethod, setRerankMethod] = useState("llm");
+  const [rerankExternalUrl, setRerankExternalUrl] = useState("");
+  const [rerankExternalModel, setRerankExternalModel] = useState("");
+  const [rerankExternalApiKey, setRerankExternalApiKey] = useState("");
   const [embedRefreshMode, setEmbedRefreshMode] = useState("immediate");
   const [embedRefreshHour, setEmbedRefreshHour] = useState(3);
   // needs_reindex banner (set on successful settings save)
@@ -151,6 +158,12 @@ export default function SettingsPage() {
     const serverEmbedModel = String(s.embedding_model ?? EMBED_MODEL_DEFAULTS[embedProv] ?? "");
     if (serverEmbedModel) localStorage.setItem(`piq_embed_model_${embedProv}`, serverEmbedModel);
     setEmbedModel(serverEmbedModel);
+    setExternalEmbeddingUrl(String(s.external_embedding_url ?? ""));
+    setExternalEmbeddingModel(String(s.external_embedding_model ?? ""));
+    setExternalEmbeddingApiKey("");
+    setEmbeddingDimension(
+      s.embedding_dimension == null ? null : Number(s.embedding_dimension)
+    );
 
     setPromptText(String(s.global_prompt_template ?? ""));
     setDiscoveryPrompt(String(s.discovery_system_prompt ?? ""));
@@ -172,6 +185,9 @@ export default function SettingsPage() {
     setVectorStoreBackend(String(s.vector_store_backend ?? "local"));
     setRerankEnabled(Boolean(s.rerank_enabled));
     setRerankMethod(String(s.rerank_method ?? "llm"));
+    setRerankExternalUrl(String(s.rerank_external_url ?? ""));
+    setRerankExternalModel(String(s.rerank_external_model ?? ""));
+    setRerankExternalApiKey("");
     setEmbedRefreshMode(String(s.embed_refresh_mode ?? "immediate"));
     setEmbedRefreshHour(Number(s.embed_refresh_hour ?? 3));
 
@@ -348,29 +364,55 @@ export default function SettingsPage() {
     values.embed_provider = selectedEmbedProvider;
 
     if (settingsTab === "aiProvider") {
+      // External embedding settings — always from React state
+      values.external_embedding_url = externalEmbeddingUrl.trim();
+      values.external_embedding_model = externalEmbeddingModel.trim();
+      values.embedding_dimension = embeddingDimension;
+
+      // External embedding API key: send new value or __REDACTED__ to preserve stored key
+      if (externalEmbeddingApiKey.trim()) {
+        values.external_embedding_api_key = externalEmbeddingApiKey.trim();
+      } else {
+        values.external_embedding_api_key = "__REDACTED__";
+      }
+
       // Cast number fields that come from NumberInput as strings
       for (const k of [
         "search_overfetch_multiplier", "search_min_score",
         "chunk_size", "chunk_overlap",
         "chroma_hnsw_search_ef", "chroma_hnsw_m", "chroma_hnsw_construction_ef",
         "qdrant_hnsw_ef", "qdrant_hnsw_m",
-        "rerank_top_k", "embed_concurrency", "embed_batch_size", "llm_timeout_seconds",
+        "rerank_top_k", "embed_concurrency", "embed_batch_size",
+        "llm_timeout_seconds",
       ]) {
         if (fd.has(k)) values[k] = Number(values[k]);
       }
-      // Boolean toggles
-      values.rerank_enabled       = rerankEnabled;
-      values.qdrant_hybrid_search = fd.get("qdrant_hybrid_search") === "on";
-      // Embed refresh — always from React state
-      values.embed_refresh_mode   = embedRefreshMode;
-      values.embed_refresh_hour   = embedRefreshHour;
-      // Qdrant API key: send new value or __REDACTED__ (backend drops redacted → preserves stored)
-      if (qdrantApiKey.trim()) {
-        values.qdrant_api_key = qdrantApiKey.trim();
-      } else {
-        values.qdrant_api_key = "__REDACTED__";
-      }
-      // Pre-flight §3.4: search_ef must cover overfetch candidates
+      // Reranker settings — completely independent from embedding settings.
+values.rerank_enabled = rerankEnabled;
+values.rerank_method = rerankMethod;
+values.rerank_external_url = rerankExternalUrl.trim();
+values.rerank_external_model = rerankExternalModel.trim();
+
+  // Reranker external API key: send new value or preserve stored key.
+  if (rerankExternalApiKey.trim()) {
+    values.rerank_external_api_key = rerankExternalApiKey.trim();
+  } else {
+    values.rerank_external_api_key = "__REDACTED__";
+  }
+
+  values.qdrant_hybrid_search = fd.get("qdrant_hybrid_search") === "on";
+  // Embed refresh — always from React state
+  values.embed_refresh_mode = embedRefreshMode;
+  values.embed_refresh_hour = embedRefreshHour;
+
+  // Qdrant API key: send new value or __REDACTED__ (backend drops redacted → preserves stored)
+  if (qdrantApiKey.trim()) {
+    values.qdrant_api_key = qdrantApiKey.trim();
+  } else {
+    values.qdrant_api_key = "__REDACTED__";
+  }
+
+ // Pre-flight §3.4: search_ef must cover overfetch candidates
       const ef = vectorStoreBackend === "qdrant"
         ? Number(values.qdrant_hnsw_ef ?? s?.qdrant_hnsw_ef ?? 128)
         : Number(values.chroma_hnsw_search_ef ?? s?.chroma_hnsw_search_ef ?? 100);
@@ -553,6 +595,14 @@ export default function SettingsPage() {
               setLlmModel={setLlmModel}
               embedModel={embedModel}
               setEmbedModel={setEmbedModel}
+              externalEmbeddingUrl={externalEmbeddingUrl}
+              setExternalEmbeddingUrl={setExternalEmbeddingUrl}
+              externalEmbeddingModel={externalEmbeddingModel}
+              setExternalEmbeddingModel={setExternalEmbeddingModel}
+              externalEmbeddingApiKey={externalEmbeddingApiKey}
+              setExternalEmbeddingApiKey={setExternalEmbeddingApiKey}
+              embeddingDimension={embeddingDimension}
+              setEmbeddingDimension={setEmbeddingDimension}
               ollamaUrl={ollamaUrl}
               setOllamaUrl={setOllamaUrl}
               bedrockRegion={bedrockRegion}
@@ -571,6 +621,12 @@ export default function SettingsPage() {
               setRerankEnabled={setRerankEnabled}
               rerankMethod={rerankMethod}
               setRerankMethod={setRerankMethod}
+              rerankExternalUrl={rerankExternalUrl}
+              setRerankExternalUrl={setRerankExternalUrl}
+              rerankExternalModel={rerankExternalModel}
+              setRerankExternalModel={setRerankExternalModel}
+              rerankExternalApiKey={rerankExternalApiKey}
+              setRerankExternalApiKey={setRerankExternalApiKey}
               embedRefreshMode={embedRefreshMode}
               setEmbedRefreshMode={setEmbedRefreshMode}
               embedRefreshHour={embedRefreshHour}

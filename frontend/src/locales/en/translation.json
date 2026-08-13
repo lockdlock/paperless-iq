@@ -586,5 +586,14 @@
   "grooming.settings.scan.resuggestDays.label": "Re-suggest after (days)",
   "grooming.settings.scan.resuggestDays.tip": "Days after which a dismissed suggestion may be re-generated. 0 = never re-suggest.",
   "version.updateAvailable": "Update available",
-  "version.updateTooltip": "v{{latest}} is available — see release notes"
+  "version.updateTooltip": "v{{latest}} is available — see release notes",
+  "aiProvider.embeddings.external": "External Embedding",
+  "aiProvider.embeddings.external.url": "External Embedding URL",
+  "aiProvider.embeddings.external.model": "External Embedding Model",
+  "aiProvider.embeddings.external.apiKey": "External Embedding API Key",
+  "aiProvider.embeddings.external.dimension": "Embedding Dimension",
+  "aiProvider.search.rerankMethod.external": "External Reranker",
+  "aiProvider.search.rerankExternal.url": "External Reranker URL",
+  "aiProvider.search.rerankExternal.model": "External Reranker Model",
+  "aiProvider.search.rerankExternal.apiKey": "External Reranker API Key"
 }

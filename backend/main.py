@@ -159,6 +159,15 @@ def _resolve_embed_provider(config: Any, providers: dict) -> Any | None:
             )
         return provider
 
+    if ep == "external":
+        provider = providers.get("external")
+        if provider is None:
+            raise ValueError(
+                "embed_provider='external' is configured but "
+                "the external embedding provider could not be initialized."
+            )
+        return provider
+
     return None
 
 
@@ -3009,6 +3018,10 @@ async def update_settings(request: Request, body: dict[str, Any] = Body(...)) ->
     old_qdrant_mode = _old.qdrant_mode
     old_embed_provider = _old.embed_provider
     old_embedding_model = _old.embedding_model
+    old_embedding_dimension = _old.embedding_dimension
+    old_external_embedding_url = _old.external_embedding_url
+    old_external_embedding_model = _old.external_embedding_model
+    old_external_embedding_api_key = _old.external_embedding_api_key
     old_chunk_size = _old.chunk_size
     old_chunk_strategy = _old.chunk_strategy
 
@@ -3034,6 +3047,10 @@ async def update_settings(request: Request, body: dict[str, Any] = Body(...)) ->
     embed_changed = (
         new_config.embed_provider != old_embed_provider
         or new_config.embedding_model != old_embedding_model
+        or new_config.embedding_dimension != old_embedding_dimension
+        or new_config.external_embedding_url != old_external_embedding_url
+        or new_config.external_embedding_model != old_external_embedding_model
+        or new_config.external_embedding_api_key != old_external_embedding_api_key
     )
     chunk_changed = (
         new_config.chunk_size != old_chunk_size
@@ -3336,7 +3353,7 @@ async def get_status(request: Request) -> dict:
         vs = getattr(request.app.state, "vector_store", None)
         if vs is not None:
             try:
-                embed_online = await asyncio.wait_for(vs.embed_health_check(), timeout=3.0)
+                embed_online = await asyncio.wait_for(vs.embed_probe(), timeout=3.0)
             except Exception:
                 pass
         if queue:

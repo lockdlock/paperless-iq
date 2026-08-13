@@ -58,14 +58,25 @@ logger = logging.getLogger(__name__)
 
 # Fields that contain credentials and must be redacted on export / API response
 CREDENTIAL_FIELDS = frozenset(
-    {"llm_credentials", "webhook_secret", "qdrant_api_key"}
+    {
+        "llm_credentials",
+        "webhook_secret",
+        "qdrant_api_key",
+        "external_embedding_api_key",
+        "rerank_external_api_key",
+    }
 )
 
 # Credential fields typed as bytes (EncryptedBlob) — env-var values for these
 # must be encoded to bytes before being placed on the model. webhook_secret is
 # a plain str field and is excluded.
 _BYTES_CREDENTIAL_FIELDS = frozenset(
-    {"llm_credentials", "qdrant_api_key"}
+    {
+        "llm_credentials",
+        "qdrant_api_key",
+        "external_embedding_api_key",
+        "rerank_external_api_key",
+    }
 )
 
 # Placeholder used in exported config files and masked API responses
@@ -95,6 +106,9 @@ _ENV_MAP: dict[str, tuple[str, type]] = {
     "frequency_fallback_count":    ("PIQ_FREQUENCY_FALLBACK_COUNT", int),
     "embed_provider":              ("PIQ_EMBED_PROVIDER", str),
     "embedding_model":             ("PIQ_EMBEDDING_MODEL", str),
+    "external_embedding_url":      ("PIQ_EXTERNAL_EMBEDDING_URL", str),
+    "external_embedding_model":    ("PIQ_EXTERNAL_EMBEDDING_MODEL", str),
+    "external_embedding_api_key":  ("PIQ_EXTERNAL_EMBEDDING_API_KEY", str),
     "embed_concurrency":           ("PIQ_EMBED_CONCURRENCY", int),
     "tag_creation_policy":         ("PIQ_TAG_CREATION_POLICY", str),
     "correspondent_creation_policy": ("PIQ_CORRESPONDENT_CREATION_POLICY", str),
@@ -125,6 +139,10 @@ _ENV_MAP: dict[str, tuple[str, type]] = {
     "rerank_method":               ("PIQ_RERANK_METHOD", str),
     "rerank_top_k":                ("PIQ_RERANK_TOP_K", int),
     "rerank_model":                ("PIQ_RERANK_MODEL", str),
+    # External reranker configuration
+    "rerank_external_url":          ("PIQ_RERANK_EXTERNAL_URL", str),
+    "rerank_external_model":        ("PIQ_RERANK_EXTERNAL_MODEL", str),
+    "rerank_external_api_key":      ("PIQ_RERANK_EXTERNAL_API_KEY", str),
     # Search tuning: Chroma-specific
     "chroma_hnsw_search_ef":       ("PIQ_CHROMA_HNSW_SEARCH_EF", int),
     "chroma_hnsw_m":               ("PIQ_CHROMA_HNSW_M", int),

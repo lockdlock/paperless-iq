@@ -22,6 +22,14 @@ interface Props {
   setLlmModel: (v: string) => void;
   embedModel: string;
   setEmbedModel: (v: string) => void;
+  externalEmbeddingUrl: string;
+  setExternalEmbeddingUrl: (v: string) => void;
+  externalEmbeddingModel: string;
+  setExternalEmbeddingModel: (v: string) => void;
+  externalEmbeddingApiKey: string;
+  setExternalEmbeddingApiKey: (v: string) => void;
+  embeddingDimension: number | null;
+  setEmbeddingDimension: (v: number | null) => void;
   ollamaUrl: string;
   setOllamaUrl: (v: string) => void;
   bedrockRegion: string;
@@ -42,6 +50,12 @@ interface Props {
   setRerankEnabled: (v: boolean) => void;
   rerankMethod: string;
   setRerankMethod: (v: string) => void;
+  rerankExternalUrl: string;
+  setRerankExternalUrl: (v: string) => void;
+  rerankExternalModel: string;
+  setRerankExternalModel: (v: string) => void;
+  rerankExternalApiKey: string;
+  setRerankExternalApiKey: (v: string) => void;
   // Embed refresh
   embedRefreshMode: string;
   setEmbedRefreshMode: (v: string) => void;
@@ -55,6 +69,10 @@ export function AIProviderTab({
   selectedEmbedProvider, setSelectedEmbedProvider,
   llmModel, setLlmModel,
   embedModel, setEmbedModel,
+  externalEmbeddingUrl, setExternalEmbeddingUrl,
+  externalEmbeddingModel, setExternalEmbeddingModel,
+  externalEmbeddingApiKey, setExternalEmbeddingApiKey,
+  embeddingDimension, setEmbeddingDimension,
   ollamaUrl, setOllamaUrl,
   bedrockRegion, setBedrockRegion,
   bedrockAccessKeyId, setBedrockAccessKeyId,
@@ -64,6 +82,9 @@ export function AIProviderTab({
   qdrantApiKey, setQdrantApiKey,
   rerankEnabled, setRerankEnabled,
   rerankMethod, setRerankMethod,
+  rerankExternalUrl, setRerankExternalUrl,
+  rerankExternalModel, setRerankExternalModel,
+  rerankExternalApiKey, setRerankExternalApiKey,
   embedRefreshMode, setEmbedRefreshMode,
   embedRefreshHour, setEmbedRefreshHour,
 }: Props) {
@@ -243,6 +264,7 @@ export function AIProviderTab({
               { value: "ollama", label: "Ollama" },
               { value: "bedrock", label: t("aiProvider.embeddings.bedrockOption") },
               { value: "openai", label: "OpenAI" },
+              { value: "external", label: t("aiProvider.embeddings.external") },
             ]}
           />
 
@@ -313,7 +335,67 @@ export function AIProviderTab({
             </>
           )}
 
-          {selectedEmbedProvider === "openai" && (
+          {selectedEmbedProvider === "external" && (
+        <>
+          <TextInput
+            label={t("aiProvider.embeddings.external.url")}
+            value={externalEmbeddingUrl}
+            onChange={e => setExternalEmbeddingUrl(e.target.value)}
+            placeholder="https://example.com/v1/embeddings"
+            description="External embedding endpoint URL."
+          />
+          <TextInput
+            label={t("aiProvider.embeddings.external.model")}
+            name="external_embedding_model"
+            value={externalEmbeddingModel}
+            onChange={e => {
+              setExternalEmbeddingModel(e.target.value);
+              setEmbedModel(e.target.value);
+            }}
+            placeholder="text-embedding-3-small"
+            description="Embedding model name."
+          />
+          <PasswordInput
+            label={t("aiProvider.embeddings.external.apiKey")}
+            value={externalEmbeddingApiKey}
+            onChange={e => setExternalEmbeddingApiKey(e.target.value)}
+            placeholder={
+              s?.external_embedding_api_key_stored
+                ? "Keep existing key"
+                : "API key"
+            }
+            description="Leave empty to keep the stored API key."
+          />
+          <NumberInput
+            label={t("aiProvider.embeddings.external.dimension")}
+            name="embedding_dimension"
+            value={embeddingDimension ?? undefined}
+            onChange={v =>
+              setEmbeddingDimension(
+                typeof v === "number" ? v : null
+              )
+            }
+            min={1}
+            allowDecimal={false}
+            placeholder="256, 512, 768, 1024, 1536, 2560"
+            description="Set the embedding dimension specified by the model."
+          />
+          <NumberInput
+            label={
+              <InfoLabel
+                label={t("aiProvider.embeddings.concurrency.label")}
+                tip={t("aiProvider.embeddings.concurrency.tip")}
+              />
+            }
+            name="embed_concurrency"
+            min={1}
+            max={16}
+            defaultValue={Number(s.embed_concurrency ?? 1)}
+          />
+        </>
+      )}
+
+      {selectedEmbedProvider === "openai" && (
             <>
               <TextInput
                 label={t("aiProvider.embeddings.model.label")}
@@ -600,6 +682,40 @@ export function AIProviderTab({
                   placeholder="amazon.rerank-v1:0"
                   description={t("aiProvider.search.rerankApiDescription")}
                 />
+              )}
+
+              {rerankMethod === "external" && (
+                <>
+                  <TextInput
+                    label={t("aiProvider.search.rerankExternal.url")}
+                    name="rerank_external_url"
+                    value={rerankExternalUrl}
+                    onChange={e => setRerankExternalUrl(e.target.value)}
+                    placeholder="https://example.com/v1/rerank"
+                    description="External reranker endpoint URL."
+                  />
+                  <TextInput
+                    label={t("aiProvider.search.rerankExternal.model")}
+                    name="rerank_external_model"
+                    value={rerankExternalModel}
+                    onChange={e => setRerankExternalModel(e.target.value)}
+                    placeholder="BAAI/bge-reranker-v2-m3"
+                    description="Reranker model name."
+                  />
+                  <PasswordInput
+                    label={t("aiProvider.search.rerankExternal.apiKey")}
+                    name="rerank_external_api_key"
+                    value={rerankExternalApiKey}
+                    onChange={e => setRerankExternalApiKey(e.target.value)}
+                    placeholder={
+                      s?.rerank_external_api_key_stored
+                        ? "Keep existing key"
+                        : "API key"
+                    }
+                    description="API key for the external reranker endpoint."
+                    autoComplete="off"
+                  />
+                </>
               )}
             </Stack>
           )}

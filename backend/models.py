@@ -133,9 +133,15 @@ class PaperlessIQConfig(BaseModel):
     chunk_overlap: int = 200  # overlap between chunks
     chunk_strategy: Literal["char", "sentence"] = "char"
     rerank_enabled: bool = False  # master switch (ships OFF)
-    rerank_method: Literal["llm", "local", "api"] = "llm"  # which reranker when enabled
+    rerank_method: Literal["llm", "local", "api", "external"] = "llm"  # which reranker when enabled
     rerank_top_k: int = 20  # how many candidates to rerank
     rerank_model: str = "BAAI/bge-reranker-v2-m3"  # default local cross-encoder (multilingual)
+
+    # --- External reranker configuration ---
+    # Independent from the LLM provider configuration.
+    rerank_external_url: str = ""
+    rerank_external_model: str = ""
+    rerank_external_api_key: bytes | None = None
 
     # --- Search tuning: CHROMA-specific ---
     chroma_hnsw_search_ef: int = 100  # recall vs latency at query time
@@ -157,8 +163,12 @@ class PaperlessIQConfig(BaseModel):
     smart_entity_selection: bool = True
     similar_docs_count: int = 10  # how many similar docs to use for entity suggestions
     frequency_fallback_count: int = 20  # top-N most frequent entities as fallback
-    embed_provider: Literal["ollama", "bedrock", "openai"] = "ollama"  # provider used for embeddings
-    embedding_model: str = "nomic-embed-text"  # embedding model name (used when embed_provider=ollama)
+    embed_provider: Literal["ollama", "bedrock", "openai", "external"] = "ollama"  # provider used for embeddings
+    embedding_model: str = "nomic-embed-text"  # embedding model name
+    embedding_dimension: int | None = None  # embedding vector dimension
+    external_embedding_url: str | None = None  # external embedding endpoint URL
+    external_embedding_model: str | None = None  # external embedding model name
+    external_embedding_api_key: EncryptedBlob = b""  # external embedding API key
     embed_concurrency: int = 1  # parallel embed calls; 1 is safe for local Ollama, raise for remote/GPU
     # Deferred re-embedding — controls when metadata-change re-embeds are flushed.
     # "immediate" = current behaviour (re-embed on every change, zero latency).
